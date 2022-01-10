@@ -29,5 +29,8 @@ configure_make(
         "all",
         "install",
     ],
+    deps = [
+        "@libdb//:libdb",
+    ],
     visibility = ["//visibility:public"],
 )
