@@ -33,5 +33,11 @@ configure_make(
         "@libdb//:libdb",
         "@cajun-jsonapi//:cajun-jsonapi",
     ],
+    out_static_libs = [
+        "librepro.a"
+    ],
+    out_shared_libs = [
+        "librepro.so"
+    ],
     visibility = ["//visibility:public"],
 )
