@@ -31,6 +31,7 @@ configure_make(
     ],
     deps = [
         "@libdb//:libdb",
+        "@cajun-jsonapi//:cajun-jsonapi",
     ],
     visibility = ["//visibility:public"],
 )
