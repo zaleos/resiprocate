@@ -1,0 +1,44 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+# TODO break down sources into smaller parts and define relationships between them so that when building
+# RePro, only required sources are considered by Bazel
+filegroup(
+    name = "resiprocate_srcs",
+    srcs = glob([
+        "**"
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+configure_make(
+    name = "resiprocate",
+    autoreconf = True,
+    autoreconf_options = [
+        "--install"
+    ],
+    configure_in_place = True,
+    env = {
+        "CXXFLAGS": "-std=c++17"
+    },
+    configure_options = [
+        "--with-repro",
+    ],
+    lib_source = ":resiprocate_srcs",
+    targets = [
+        "clean",
+        "",
+        "install",
+    ],
+    deps = [
+        "@libdb//:libdb",
+        "@cajun-jsonapi//:cajun-jsonapi",
+    ],
+    out_static_libs = [
+        "librepro.a"
+    ],
+    out_shared_libs = [
+        "librepro.so"
+    ],
+    visibility = ["//visibility:public"],
+)
