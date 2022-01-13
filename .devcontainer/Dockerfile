@@ -6,7 +6,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-${VARIANT}
 
 # Installing Sipplauncher and it's dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y tcpdump wireshark
+    && apt-get install -y tcpdump wireshark sngrep
 
 # -------------------
 # Install SIPp
