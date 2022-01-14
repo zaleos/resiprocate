@@ -61,7 +61,7 @@ a=fmtp:96 0-15
     <send>
         <![CDATA[
 ACK [$remote_contact_uri] SIP/2.0
-[last_Via:]
+Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
 [last_From:]
 [last_To:]
 [last_Call-ID:]
