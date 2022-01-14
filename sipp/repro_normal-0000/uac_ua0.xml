@@ -3,7 +3,7 @@
 
     <send start_rtd="true">
         <![CDATA[
-INVITE sip:test@{{ua1.host}} SIP/2.0
+INVITE sip:test@example.com SIP/2.0
 Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
 From: [field1] <sip:[field1]@[local_ip]>;tag=CALLER[call_number]
 To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
@@ -14,7 +14,8 @@ Max-Forwards: 70
 Allow: PRACK, INVITE, ACK, BYE, CANCEL, UPDATE, INFO, SUBSCRIBE, NOTIFY, REFER, MESSAGE, OPTIONS
 [routes]
 Content-Type: application/sdp
-X-Zaleos-Target: sip:user1@example.com, <sip:user2@example.com>
+X-Zaleos-Target: sip:user1@{{ua1.host}}
+X-Zaleos-Target: sip:user2@{{ua2.host}}
 Content-Length: [len]
 
 v=0
