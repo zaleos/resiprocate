@@ -125,7 +125,8 @@ librepro_la_SOURCES = \
 	monkeys/SimpleTargetHandler.cxx \
 	monkeys/GeoProximityTargetSorter.cxx \
 	monkeys/RequestFilter.cxx \
-	monkeys/MessageSilo.cxx
+	monkeys/MessageSilo.cxx \
+    monkeys/HeaderRouteMonkey.cxx
 
 reproincludedir = $(includedir)/repro
 nobase_reproinclude_HEADERS = AbstractDb.hxx \
@@ -164,6 +165,7 @@ nobase_reproinclude_HEADERS = AbstractDb.hxx \
 	monkeys/GeoProximityTargetSorter.hxx \
 	monkeys/RequestFilter.hxx \
 	monkeys/MessageSilo.hxx \
+	monkeys/HeaderRouteMonkey.hxx \
 	MySqlDb.hxx \
 	OutboundTarget.hxx \
 	PersistentMessageQueue.hxx \
