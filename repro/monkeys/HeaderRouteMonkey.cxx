@@ -39,13 +39,16 @@ HeaderRouteMonkey::process(RequestContext &context)
 
     if (msg.exists(h_XZaleosTargets))
     {
+        resip::SipMessageOptions opts;
+        opts.mTxOptions.mTimerB = 4000; // 4sec
         const StringCategories &targetHeaders = msg.header(h_XZaleosTargets);
         for (StringCategories::const_iterator it = targetHeaders.begin(); it != targetHeaders.end(); it++)
         {
             auto targetHdrValue = it->value();
             InfoLog(<< "Header value: " << targetHdrValue);
             // Add Simple Target
-            context.getResponseContext().addTarget(NameAddr(Uri(targetHdrValue.data())));
+            std::unique_ptr<Target> target(new Target(NameAddr(Uri(targetHdrValue.data())), opts));
+            context.getResponseContext().addTarget(std::move(target));
         }
     }
     else
