@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<scenario name="">
+
+
+    <recv request="INVITE" rrs="true" timeout="5000" crlf="true">
+        <action>
+            <ereg regexp="&lt;(.*)&gt;" search_in="hdr" header="Contact:" check_it="true" assign_to="remote_contact,remote_contact_uri" occurrence="1" />
+            <log message="Regex action log: hdr=Contact, regex=&lt;(.*)&gt;, var=remote_contact, value=[$remote_contact]" />
+            <log message="Regex action log: hdr=Contact, regex=&lt;(.*)&gt;, var=remote_contact_uri, value=[$remote_contact_uri]" />
+        </action>
+    </recv>
+
+    <!-- definition of the response time repartition table (unit is ms)   -->
+    <ResponseTimeRepartition value="10, 20, 30, 40, 50" />
+
+    <!-- definition of the call length repartition table (unit is ms)     -->
+    <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000" />
+
+</scenario>
