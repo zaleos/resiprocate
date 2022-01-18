@@ -41,6 +41,7 @@ HeaderRouteMonkey::process(RequestContext &context)
     {
         resip::SipMessageOptions opts;
         opts.mTxOptions.mTimerB = 4000; // 4sec
+        opts.mTxOptions.mTimerC = 8000; // 8sec
         const StringCategories &targetHeaders = msg.header(h_XZaleosTargets);
         for (StringCategories::const_iterator it = targetHeaders.begin(); it != targetHeaders.end(); it++)
         {
