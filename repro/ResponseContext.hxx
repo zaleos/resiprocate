@@ -241,7 +241,8 @@ class ResponseContext
       // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
 
-      void processTimerC();
+      void updateTimerC(const resip::Data &tid);
+      void processTimerC(const resip::Data &tid, int serial);
 
       void beginClientTransaction(repro::Target* target);
       void cancelClientTransaction(repro::Target* target, const resip::Tokens* reasons = 0);
@@ -279,6 +280,7 @@ class ResponseContext
       int mBestPriority;
       bool mSecure;
       bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      std::unordered_map<resip::Data, int> mTimerCSerial;
 
       void forwardBestResponse();
 

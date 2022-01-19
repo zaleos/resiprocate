@@ -974,12 +974,44 @@ ResponseContext::processCancel(const SipMessage& request)
 }
 
 void
-ResponseContext::processTimerC()
+ResponseContext::updateTimerC(const resip::Data &tid)
 {
-   if (!mRequestContext.mHaveSentFinalResponse)
+   InfoLog(<<"Updating timer C for client transaction " << tid);
+   int timerCSerial = 0;
+   auto i = mTimerCSerial.find(tid);
+   if (i != mTimerCSerial.end())
    {
-      InfoLog(<<"Canceling client transactions due to timer C.");
-      cancelAllClientTransactions();
+       timerCSerial = ++i->second;
+   }
+   else
+   {
+       mTimerCSerial[tid] = timerCSerial;
+   }
+   TimerCMessage *tc = new TimerCMessage(tid, timerCSerial);
+   mRequestContext.getProxy().postTimerC(std::unique_ptr<TimerCMessage>(tc));
+}
+
+void
+ResponseContext::processTimerC(const resip::Data &tid, int serial)
+{
+   bool isLatestTimer = false;
+   auto i = mTimerCSerial.find(tid);
+   if (i != mTimerCSerial.end())
+   {
+       isLatestTimer = (serial == i->second);
+   }
+
+   if (!mRequestContext.mHaveSentFinalResponse && isLatestTimer)
+   {
+      InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
+      cancelClientTransaction(tid);
+
+      auto i = mActiveTransactionMap.find(tid);
+      if (i != mActiveTransactionMap.end()) {
+          auto targetRequest = buildTargetRequest(i->second);
+          std::unique_ptr<resip::SipMessage> response(Helper::makeResponse(*targetRequest, 408));
+          mRequestContext.process(std::move(response));
+      }
    }
 }
 
@@ -1109,7 +1141,7 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            mRequestContext.updateTimerC();
+            updateTimerC(mCurrentResponseTid);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
