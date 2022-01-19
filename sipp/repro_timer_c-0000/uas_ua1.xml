@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<scenario name="">
+
+
+    <recv request="INVITE" rrs="true" crlf="true" />
+
+    <pause distribution="uniform" min="100" max="300" />
+
+    <send>
+        <![CDATA[
+SIP/2.0 100 Trying
+[last_Via:]
+[last_From:]
+[last_To:]
+[last_Call-ID:]
+[last_CSeq:]
+Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
+[last_Record-Route:]
+Content-Length: [len]
+]]>
+    </send>
+
+    <pause distribution="uniform" min="100" max="300" />
+
+    <send>
+        <![CDATA[
+SIP/2.0 180 Ringing
+[last_Via:]
+[last_From:]
+[last_To:];tag=CALLEE[call_number]
+[last_Call-ID:]
+[last_CSeq:]
+Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
+[last_Record-Route:]
+Content-Length: [len]
+]]>
+    </send>
+
+
+
+    <recv request="CANCEL" rrs="true" timeout="9000" crlf="true">
+        <action></action>
+    </recv>
+
+
+    <send>
+        <![CDATA[
+SIP/2.0 200 OK
+[last_Via:]
+[last_From:]
+[last_To:];tag=CALLEE[call_number]
+[last_Call-ID:]
+[last_CSeq:]
+Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
+[last_Record-Route:]
+Content-Length: [len]
+]]>
+    </send>
+
+
+    <!-- definition of the response time repartition table (unit is ms)   -->
+    <ResponseTimeRepartition value="10, 20, 30, 40, 50" />
+
+    <!-- definition of the call length repartition table (unit is ms)     -->
+    <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000" />
+
+</scenario>
