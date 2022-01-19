@@ -484,6 +484,101 @@ ResponseContext::isDuplicate(const repro::Target* target) const
    return false;
 }
 
+std::unique_ptr<resip::SipMessage>
+ResponseContext::buildTargetRequest(Target *target)
+{
+    SipMessage &orig = mRequestContext.getOriginalRequest();
+    std::unique_ptr<SipMessage> request(new SipMessage(orig));
+
+    // If the target has a ;lr parameter, then perform loose routing
+    if (target->uri().exists(p_lr))
+    {
+        request->header(h_Routes).push_front(NameAddr(target->uri()));
+    }
+    else
+    {
+        request->header(h_RequestLine).uri() = target->uri();
+    }
+
+    // .bwc. Proxy checks whether this is valid, and rejects if not.
+    request->header(h_MaxForwards).value()--;
+
+    bool inDialog = false;
+
+    try
+    {
+        inDialog = request->header(h_To).exists(p_tag);
+    }
+    catch (resip::ParseException &)
+    {
+        // ?bwc? Do we ignore this and just say this is a dialog-creating
+        // request?
+    }
+
+    // Potential source Record-Route addition only for new dialogs
+    // !bwc! It looks like we really ought to be record-routing in-dialog
+    // stuff.
+
+    // only add record route if configured to do so
+    bool transportSpecificRecordRoute;
+    const NameAddr &receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey, &transportSpecificRecordRoute);
+    if (!receivedTransportRecordRoute.uri().host().empty())
+    {
+        if (!inDialog && // only for dialog-creating request
+            (request->method() == INVITE ||
+             request->method() == SUBSCRIBE ||
+             request->method() == REFER))
+        {
+            insertRecordRoute(*request,
+                              orig.getReceivedTransportTuple(),
+                              receivedTransportRecordRoute,
+                              transportSpecificRecordRoute,
+                              target);
+        }
+        else if (request->method() == REGISTER)
+        {
+            insertRecordRoute(*request,
+                              orig.getReceivedTransportTuple(),
+                              receivedTransportRecordRoute,
+                              transportSpecificRecordRoute,
+                              target,
+                              true /* do Path instead */);
+        }
+    }
+
+    if ((resip::InteropHelper::getOutboundSupported() ||
+         resip::InteropHelper::getRRTokenHackEnabled() ||
+         mIsClientBehindNAT) &&
+        target->rec().mUseFlowRouting &&
+        target->rec().mReceivedFrom.mFlowKey)
+    {
+        // .bwc. We only override the destination if we are sending to an
+        // outbound contact. If this is not an outbound contact, but the
+        // endpoint has given us a Contact with the correct ip-address and
+        // port, we might be able to find the connection they formed when they
+        // registered earlier, but that will happen down in TransportSelector.
+        request->setDestination(target->rec().mReceivedFrom);
+    }
+
+    DebugLog(<< "Set tuple dest: " << request->getDestination());
+
+    // .bwc. Path header addition.
+    if (!target->rec().mSipPath.empty())
+    {
+        request->header(h_Routes).append(target->rec().mSipPath);
+    }
+
+    // a baboon might adorn the message, record call logs or CDRs, might
+    // insert loose routes on the way to the next hop
+    Helper::processStrictRoute(*request);
+
+    //This is where the request acquires the tid of the Target. The tids
+    //should be the same from here on out.
+    request->header(h_Vias).push_front(target->via());
+
+    return request;
+}
+
 void
 ResponseContext::beginClientTransaction(repro::Target* target)
 {
@@ -491,107 +586,19 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    // target in an invalid state, it is a bug.
    resip_assert(target->status() == Target::Candidate);
 
-   SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig);
+   auto targetRequest = buildTargetRequest(target);
 
-   // If the target has a ;lr parameter, then perform loose routing
-   if(target->uri().exists(p_lr))
+   if (mRequestContext.getOriginalRequest().method() == INVITE)
    {
-      request.header(h_Routes).push_front(NameAddr(target->uri()));
-   }
-   else
-   {
-      request.header(h_RequestLine).uri() = target->uri();
-   }
-
-   // .bwc. Proxy checks whether this is valid, and rejects if not.
-   request.header(h_MaxForwards).value()--;
-   
-   bool inDialog=false;
-   
-   try
-   {
-      inDialog=request.header(h_To).exists(p_tag);
-   }
-   catch(resip::ParseException&)
-   {
-      // ?bwc? Do we ignore this and just say this is a dialog-creating
-      // request?
-   }
-   
-   // Potential source Record-Route addition only for new dialogs
-   // !bwc! It looks like we really ought to be record-routing in-dialog
-   // stuff.
-
-   // only add record route if configured to do so
-   bool transportSpecificRecordRoute;
-   const NameAddr& receivedTransportRecordRoute = mRequestContext.mProxy.getRecordRoute(orig.getSource().mTransportKey, &transportSpecificRecordRoute);
-   if(!receivedTransportRecordRoute.uri().host().empty())
-   {
-      if (!inDialog &&  // only for dialog-creating request
-          (request.method() == INVITE ||
-           request.method() == SUBSCRIBE ||
-           request.method() == REFER))
-      {
-         insertRecordRoute(request,
-                           orig.getReceivedTransportTuple(),
-                           receivedTransportRecordRoute,
-                           transportSpecificRecordRoute,
-                           target);
-      }
-      else if(request.method()==REGISTER)
-      {
-         insertRecordRoute(request,
-                           orig.getReceivedTransportTuple(),
-                           receivedTransportRecordRoute,
-                           transportSpecificRecordRoute,
-                           target,
-                           true /* do Path instead */);
-      }
-   }
-      
-   if((resip::InteropHelper::getOutboundSupported() ||
-       resip::InteropHelper::getRRTokenHackEnabled() ||
-       mIsClientBehindNAT) &&
-      target->rec().mUseFlowRouting &&
-      target->rec().mReceivedFrom.mFlowKey)
-   {
-      // .bwc. We only override the destination if we are sending to an
-      // outbound contact. If this is not an outbound contact, but the
-      // endpoint has given us a Contact with the correct ip-address and 
-      // port, we might be able to find the connection they formed when they
-      // registered earlier, but that will happen down in TransportSelector.
-      request.setDestination(target->rec().mReceivedFrom);
-   }
-
-   DebugLog(<<"Set tuple dest: " << request.getDestination());
-
-   // .bwc. Path header addition.
-   if(!target->rec().mSipPath.empty())
-   {
-      request.header(h_Routes).append(target->rec().mSipPath);
-   }
-
-   // a baboon might adorn the message, record call logs or CDRs, might
-   // insert loose routes on the way to the next hop
-   Helper::processStrictRoute(request);
-   
-   //This is where the request acquires the tid of the Target. The tids 
-   //should be the same from here on out.
-   request.header(h_Vias).push_front(target->via());
-
-   if(!mRequestContext.mInitialTimerCSet &&
-      mRequestContext.getOriginalRequest().method()==INVITE)
-   {
-      mRequestContext.mInitialTimerCSet=true;
-      mRequestContext.updateTimerC();
+      // Starting TimerC for the new client transaction
+      updateTimerC(targetRequest->getTransactionId());
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
    // - determining the next hop (tuple)
    // - adding a content-length if needed
    // - sending the request
-   sendRequest(request); 
+   sendRequest(*targetRequest);
 
    target->status() = Target::Started;
 }

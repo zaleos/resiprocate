@@ -264,6 +264,8 @@ class ResponseContext
       bool needsFlowTokenToWork(const resip::NameAddr& contact) const;
       bool sendingToSelf(Target* target);
 
+      std::unique_ptr<resip::SipMessage> buildTargetRequest(Target *target);
+
       void sendRequest(resip::SipMessage& request);
       
       TransactionMap mCandidateTransactionMap; //Targets with status Candidate.
