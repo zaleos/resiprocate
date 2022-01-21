@@ -1,7 +1,7 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.205.2/containers/cpp/.devcontainer/base.Dockerfile
 
 # [Choice] Debian / Ubuntu version (use Debian 11/9, Ubuntu 18.04/21.04 on local arm64/Apple Silicon): debian-11, debian-10, debian-9, ubuntu-21.04, ubuntu-20.04, ubuntu-18.04
-ARG VARIANT="bullseye"
+ARG VARIANT="ubuntu-20.04"
 FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-${VARIANT}
 
 # Installing Sipplauncher and it's dependencies
@@ -42,11 +42,14 @@ RUN mkdir -p /tmp/sipplauncher \
     && sipplauncher --help \
     && sipplauncher --version
 
-# [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     # Build tools 
-    && apt-get -y install --no-install-recommends autoconf automake libtool pkg-config
+    && apt-get -y install --no-install-recommends autoconf automake libtool pkg-config libcppunit-dev libboost-dev
 
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    # Test tools (needed for TFM)
+    && apt-get -y install --no-install-recommends libcppunit-dev libboost-dev libnetxx-dev libpopt-dev
+    
 # BerkeleyDB dependency
 RUN apt-get -y install libdb++-dev
 
