@@ -282,6 +282,7 @@ class ResponseContext
       int mBestPriority;
       bool mSecure;
       bool mIsClientBehindNAT;  // Only set if InteropHelper::getClientNATDetectionEnabled() is true
+      static const int TimerCSerialInit = 0;
       std::unordered_map<resip::Data, int> mTimerCSerial;
 
       void forwardBestResponse();
