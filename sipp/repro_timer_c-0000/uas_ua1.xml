@@ -2,7 +2,14 @@
 <scenario name="">
 
 
-    <recv request="INVITE" rrs="true" crlf="true" />
+    <recv request="INVITE" rrs="true" crlf="true">
+        <action>
+            <ereg regexp=".*" search_in="hdr" header="Via:" occurrence="1" check_it="true" assign_to="via_1" />
+            <ereg regexp=".*" search_in="hdr" header="Via:" occurrence="2" check_it="true" assign_to="via_2" />
+            <log message="Regex action log: hdr=Via (1), var=via_1, value=[$via_1]" />
+            <log message="Regex action log: hdr=Via (2), var=via_2, value=[$via_2]" />
+        </action>
+    </recv>
 
     <pause distribution="uniform" min="100" max="300" />
 
@@ -27,7 +34,7 @@ Content-Length: [len]
 SIP/2.0 180 Ringing
 [last_Via:]
 [last_From:]
-[last_To:];tag=CALLEE[call_number]
+[last_To:];tag=CALLEE_totag
 [last_Call-ID:]
 [last_CSeq:]
 Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
@@ -37,10 +44,7 @@ Content-Length: [len]
     </send>
 
 
-
-    <recv request="CANCEL" rrs="true" timeout="9000" crlf="true">
-        <action></action>
-    </recv>
+    <recv request="CANCEL" timeout="9000" />
 
 
     <send>
@@ -52,14 +56,31 @@ SIP/2.0 200 OK
 [last_Call-ID:]
 [last_CSeq:]
 Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
+Content-Length: [len]
+]]>
+    </send>
+
+    <pause distribution="uniform" min="100" max="300" />
+
+    <send>
+        <![CDATA[
+SIP/2.0 487 Request Terminated
+Via:[$via_1],[$via_2]
+[last_From:]
+[last_To:];tag=CALLEE[call_number]
+[last_Call-ID:]
+CSeq: 1 INVITE
+Contact: [field0] <sip:[field0]@[local_ip]:[local_port]>
 [last_Record-Route:]
 Content-Length: [len]
 ]]>
     </send>
 
+    <recv request="ACK" rrs="true" />
+
 
     <!-- definition of the response time repartition table (unit is ms)   -->
-    <ResponseTimeRepartition value="10, 20, 30, 40, 50" />
+    <ResponseTimeRepartition value="10, 20, 30, 40, 50" /> 
 
     <!-- definition of the call length repartition table (unit is ms)     -->
     <CallLengthRepartition value="10, 50, 100, 500, 1000, 5000, 10000" />
