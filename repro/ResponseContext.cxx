@@ -488,7 +488,7 @@ std::unique_ptr<resip::SipMessage>
 ResponseContext::buildTargetRequest(Target *target)
 {
     SipMessage &orig = mRequestContext.getOriginalRequest();
-    std::unique_ptr<SipMessage> request(new SipMessage(orig));
+    std::unique_ptr<SipMessage> request(new SipMessage(orig, target->mSipMessageOptions));
 
     // If the target has a ;lr parameter, then perform loose routing
     if (target->uri().exists(p_lr))
