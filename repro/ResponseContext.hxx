@@ -241,7 +241,7 @@ class ResponseContext
       // call this from RequestContext after the lemur chain for any response 
       void processResponse(resip::SipMessage& response);
 
-      void updateTimerC(const resip::Data &tid);
+      void updateTimerC(const resip::Data &tid, int customDelayMs = 0);
       void processTimerC(const resip::Data &tid, int serial);
 
       void beginClientTransaction(repro::Target* target);

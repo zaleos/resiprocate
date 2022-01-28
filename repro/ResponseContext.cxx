@@ -591,7 +591,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    if (mRequestContext.getOriginalRequest().method() == INVITE)
    {
       // Starting TimerC for the new client transaction
-      updateTimerC(targetRequest->getTransactionId());
+      updateTimerC(targetRequest->getTransactionId(), target->mSipMessageOptions.mTxOptions.mTimerC);
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
@@ -981,7 +981,7 @@ ResponseContext::processCancel(const SipMessage& request)
 }
 
 void
-ResponseContext::updateTimerC(const resip::Data &tid)
+ResponseContext::updateTimerC(const resip::Data &tid, int customDelayMs)
 {
    InfoLog(<<"Updating timer C for client transaction " << tid);
    int timerCSerial = TimerCSerialInit;
@@ -995,7 +995,7 @@ ResponseContext::updateTimerC(const resip::Data &tid)
        mTimerCSerial[tid] = timerCSerial;
    }
    TimerCMessage *tc = new TimerCMessage(tid, timerCSerial);
-   mRequestContext.getProxy().postTimerC(std::unique_ptr<TimerCMessage>(tc));
+   mRequestContext.getProxy().postTimerC(std::unique_ptr<TimerCMessage>(tc), customDelayMs);
 }
 
 void
@@ -1159,7 +1159,8 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            updateTimerC(mCurrentResponseTid);
+            auto currentTargetPtr = i->second;
+            updateTimerC(mCurrentResponseTid, currentTargetPtr->mSipMessageOptions.mTxOptions.mTimerC);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)
