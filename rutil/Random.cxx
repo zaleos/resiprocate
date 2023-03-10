@@ -2,6 +2,7 @@
 #include "resip/stack/config.hxx"
 #endif
 
+#include <cstdlib>
 #include <cassert>
 
 #ifdef WIN32

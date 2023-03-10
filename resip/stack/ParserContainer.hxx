@@ -1,6 +1,7 @@
 #ifndef RESIP_ParserContainer_hxx
 #define RESIP_ParserContainer_hxx
 
+#include <cstddef>
 #include <algorithm>
 #include <iterator>
 
