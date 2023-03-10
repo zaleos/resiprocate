@@ -35,8 +35,8 @@ RUN ls -la /${TAG}
 # Building older versions
 RUN cd ${TAG} \
  && ./configure --disable-ssl --enable-repro --enable-popt \
- && make -j 8 \
- && mkdir /repro && make DESTDIR=/repro install
+ && make -j 16 \
+ && mkdir /repro && make DESTDIR=/repro install install-repro
 
 
 # Building latest versions of resiprocate
@@ -46,4 +46,4 @@ RUN cd ${TAG} \
 #  && make -j 8 \
 #  && mkdir /repro && make DESTDIR=/repro install
 
-RUN ls -la /repro
+CMD /repro/usr/local/sbin/repro
