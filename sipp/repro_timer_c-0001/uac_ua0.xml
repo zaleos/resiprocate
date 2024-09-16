@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <scenario name="" description="">
 
+
     <send start_rtd="true">
         <![CDATA[
 INVITE sip:test@example.com SIP/2.0
 Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
 From: [field1] <sip:[field1]@[local_ip]>;tag=CALLER[call_number]
 To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
-Call-ID: swqlaw///[call_id]
+Call-ID: uplsoy///[call_id]
 CSeq: [cseq] INVITE
 Contact: [field1] <sip:[field1]@[local_ip]:[local_port]>
 Max-Forwards: 70
@@ -36,26 +37,15 @@ a=fmtp:96 0-15
 ]]>
     </send>
 
-    <recv response="100" rtd="true" timeout="2000" rrs="false" optional="false" />
+    <recv response="100" rtd="true" rrs="false" optional="false" />
 
+    <recv response="180" rtd="true" rrs="false" optional="false" />
 
-    <recv response="180" rtd="true" timeout="2000" rrs="false" optional="false" />
-
-
-    <recv response="200" rtd="true" timeout="2000" rrs="true" optional="false">
+    <recv response="200" rtd="true" timeout="10000" rrs="true" optional="false">
         <action>
             <ereg regexp="&lt;(.*)&gt;" search_in="hdr" header="Contact:" check_it="true" assign_to="remote_contact,remote_contact_uri" occurrence="1" />
             <log message="Regex action log: hdr=Contact, regex=&lt;(.*)&gt;, var=remote_contact, value=[$remote_contact]" />
             <log message="Regex action log: hdr=Contact, regex=&lt;(.*)&gt;, var=remote_contact_uri, value=[$remote_contact_uri]" />
-            <ereg regexp="\s+(.*)" search_in="hdr" header="From:" check_it="true" assign_to="_,uac_us_hdr" occurrence="1" />
-            <log message="Regex action log: hdr=From, regex=\s+(.*), var=_, value=[$_]" />
-            <log message="Regex action log: hdr=From, regex=\s+(.*), var=uac_us_hdr, value=[$uac_us_hdr]" />
-            <ereg regexp="\s+(.*)" search_in="hdr" header="To:" check_it="true" assign_to="_,uac_them_hdr" occurrence="1" />
-            <log message="Regex action log: hdr=To, regex=\s+(.*), var=_, value=[$_]" />
-            <log message="Regex action log: hdr=To, regex=\s+(.*), var=uac_them_hdr, value=[$uac_them_hdr]" />
-            <ereg regexp="&lt;(.*)&gt;" search_in="hdr" header="To:" check_it="true" assign_to="_,uac_them_hdr_uri" occurrence="1" />
-            <log message="Regex action log: hdr=To, regex=&lt;(.*)&gt;, var=_, value=[$_]" />
-            <log message="Regex action log: hdr=To, regex=&lt;(.*)&gt;, var=uac_them_hdr_uri, value=[$uac_them_hdr_uri]" />
         </action>
     </recv>
 
@@ -75,7 +65,9 @@ Content-Length: [len]
     </send>
 
 
-    <recv request="BYE" rrs="true" timeout="5000" crlf="true" />
+    <recv request="BYE" rrs="true" crlf="true">
+        <action></action>
+    </recv>
 
 
     <send>

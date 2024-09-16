@@ -87,6 +87,7 @@
 #include "repro/monkeys/RequestFilter.hxx"
 #include "repro/monkeys/MessageSilo.hxx"
 #include "repro/monkeys/CertificateAuthenticator.hxx"
+#include "repro/monkeys/HeaderRouteMonkey.hxx"
 #include "repro/stateAgents/PresenceServer.hxx"
 
 #if defined(USE_SSL)
@@ -1945,6 +1946,8 @@ ReproRunner::makeRequestProcessorChain(ProcessorChain& chain)
    {
       addProcessor(chain, mAuthFactory->getDigestAuthenticator()); 
    }
+
+   addProcessor(chain, std::unique_ptr<Processor>(new HeaderRouteMonkey(*mProxyConfig)));
 
    // Add am I responsible monkey
    addProcessor(chain, std::unique_ptr<Processor>(new AmIResponsible(mProxyConfig->getConfigBool("AlwaysAllowRelaying", false))));
