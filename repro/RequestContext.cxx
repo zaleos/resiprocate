@@ -678,7 +678,7 @@ RequestContext::process(std::unique_ptr<ApplicationMessage> app)
    {
       if(tc->mSerial == mTCSerial)
       {
-         mResponseContext.processTimerC();
+         mResponseContext.processTimerC(tc->getTransactionId());
       }
 
       return;
@@ -890,12 +890,12 @@ RequestContext::getDigestIdentity() const
 }
 
 void
-RequestContext::updateTimerC()
+RequestContext::updateTimerC(int customDelayMs)
 {
    InfoLog(<<"Updating timer C.");
    mTCSerial++;
    TimerCMessage* tc = new TimerCMessage(this->getTransactionId(),mTCSerial);
-   mProxy.postTimerC(std::unique_ptr<TimerCMessage>(tc));
+   mProxy.postTimerC(std::unique_ptr<TimerCMessage>(tc), customDelayMs);
 }
 
 void

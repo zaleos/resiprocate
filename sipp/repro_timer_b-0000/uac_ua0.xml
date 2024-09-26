@@ -38,8 +38,8 @@ a=fmtp:96 0-15
 
     <recv response="100" rtd="true" timeout="2000" rrs="false" optional="false" />
 
-
-    <recv response="180" rtd="true" timeout="2000" rrs="false" optional="false" />
+    <!-- 180 from next target must arrive within 4sec (TimerB for first target) ± 1sec -->
+    <recv response="180" rtd="true" timeout="5000" rrs="false" optional="false" />
 
 
     <recv response="200" rtd="true" timeout="2000" rrs="true" optional="false">

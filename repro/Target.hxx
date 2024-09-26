@@ -8,83 +8,84 @@
 #include "resip/stack/NameAddr.hxx"
 #include "rutil/Data.hxx"
 #include "resip/stack/Via.hxx"
+#include "resip/stack/SipMessage.hxx"
 #include "resip/dum/ContactInstanceRecord.hxx"
 #include "rutil/KeyValueStore.hxx"
 
 namespace repro
 {
 
-class Target
-{
-   public:
-   
-      typedef enum
-      {
-         Candidate, //Transaction has not started
-         Started, //Transaction has started, no final responses
-         Cancelled, //Transaction has been cancelled, but no final response yet
-         Terminated, //Transaction has received a final response
-         NonExistent //The state of transactions that do not exist
-      } Status;
-   
-      Target();
-      Target(const resip::Uri& uri);
-      Target(const resip::NameAddr& target);
-      Target(const resip::ContactInstanceRecord& record);
+    class Target
+    {
+    public:
+        typedef enum
+        {
+            Candidate,  //Transaction has not started
+            Started,    //Transaction has started, no final responses
+            Cancelled,  //Transaction has been cancelled, but no final response yet
+            Terminated, //Transaction has received a final response
+            NonExistent //The state of transactions that do not exist
+        } Status;
 
-      virtual ~Target();
-      
-      virtual const resip::Data& tid() const;
-           
-      virtual Status& status();
-      virtual const Status& status() const;
-      
-      virtual const resip::Via& setVia(const resip::Via& via);
-      virtual const resip::Via& via() const;
-      
-      virtual const resip::Uri& uri() const {return mRec.mContact.uri();}
-      
-      virtual const resip::ContactInstanceRecord& rec() const;
-      virtual resip::ContactInstanceRecord& rec();
-      virtual void setRec(const resip::ContactInstanceRecord& rec);
-      
-      virtual Target* clone() const;
-      
-      //In case you need const accessors to keep things happy.
-      virtual int getPriority() const;
-      virtual bool shouldAutoProcess() const;
-      
-      // Accessor for per-target extensible state storage for monkeys
-      resip::KeyValueStore& getKeyValueStore() { return mKeyValueStore; }
+        Target();
+        Target(const resip::Uri &uri, const resip::SipMessageOptions &sipMessageOpts = {});
+        Target(const resip::NameAddr &target, const resip::SipMessageOptions &sipMessageOpts = {});
+        Target(const resip::ContactInstanceRecord &record, const resip::SipMessageOptions &sipMessageOpts = {});
 
-      static bool priorityMetricCompare(const Target* lhs, const Target* rhs)
-      {
-         return lhs->mPriorityMetric > rhs->mPriorityMetric;
-      }
+        virtual ~Target();
 
-      /**
+        virtual const resip::Data &tid() const;
+
+        virtual Status &status();
+        virtual const Status &status() const;
+
+        virtual const resip::Via &setVia(const resip::Via &via);
+        virtual const resip::Via &via() const;
+
+        virtual const resip::Uri &uri() const { return mRec.mContact.uri(); }
+
+        virtual const resip::ContactInstanceRecord &rec() const;
+        virtual resip::ContactInstanceRecord &rec();
+        virtual void setRec(const resip::ContactInstanceRecord &rec);
+
+        virtual Target *clone() const;
+
+        //In case you need const accessors to keep things happy.
+        virtual int getPriority() const;
+        virtual bool shouldAutoProcess() const;
+
+        // Accessor for per-target extensible state storage for monkeys
+        resip::KeyValueStore &getKeyValueStore() { return mKeyValueStore; }
+
+        static bool priorityMetricCompare(const Target *lhs, const Target *rhs)
+        {
+            return lhs->mPriorityMetric > rhs->mPriorityMetric;
+        }
+
+        /**
          Higher value denotes higher priority.
       */
-      int mPriorityMetric;
-      bool mShouldAutoProcess;
-      
-   protected:
-      Status mStatus;
-      resip::Via mVia;
-      resip::ContactInstanceRecord mRec;
-      resip::KeyValueStore mKeyValueStore;
-};// class Target
+        int mPriorityMetric;
+        bool mShouldAutoProcess;
+        resip::SipMessageOptions mSipMessageOptions;
+
+    protected:
+        Status mStatus;
+        resip::Via mVia;
+        resip::ContactInstanceRecord mRec;
+        resip::KeyValueStore mKeyValueStore;
+    }; // class Target
 
 #ifdef __SUNPRO_CC
-typedef std::vector<Target*> TargetPtrList;
+    typedef std::vector<Target *> TargetPtrList;
 #else
-typedef std::list<Target*> TargetPtrList;
+    typedef std::list<Target *> TargetPtrList;
 #endif
 
-EncodeStream& 
-operator<<(EncodeStream& strm, const repro::Target& t);
+    EncodeStream &
+    operator<<(EncodeStream &strm, const repro::Target &t);
 
-}// namespace repro
+} // namespace repro
 
 #endif
 

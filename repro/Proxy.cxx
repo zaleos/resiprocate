@@ -462,8 +462,23 @@ Proxy::thread()
                }
                else
                {
-                  InfoLog (<< "No matching request context...ignoring " << *app);
-                  delete app;
+                   RequestContextMap::iterator i = mClientRequestContexts.find(tid);
+                   // the underlying RequestContext may not exist
+                   if (i != mServerRequestContexts.end())
+                   {
+                       DebugLog(<< "Sending " << *app << " to " << *(i->second));
+                       try
+                       {
+                           i->second->process(std::unique_ptr<resip::ApplicationMessage>(app));
+                       }
+                       catch (resip::BaseException &e)
+                       {
+                           ErrLog(<< "Uncaught exception in process: " << e);
+                       }
+                   } else {
+                       InfoLog(<< "No matching request context...ignoring " << *app);
+                       delete app;
+                   }
                }
             }
             else if (term)
@@ -558,12 +573,16 @@ Proxy::addClientTransaction(const Data& transactionId, RequestContext* rc)
 }
 
 void
-Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc)
+Proxy::postTimerC(std::unique_ptr<TimerCMessage> tc, int customDelayMs)
 {
-   if(mTimerC > 0)
+   // Convert ms to seconds
+   int delay = customDelayMs > 0 ? std::round(customDelayMs / 1000) : 0;
+   // Fall back to TimerC value from configuration if no custom delay is supplied
+   delay = delay > 0 ? delay : mTimerC;
+   if (delay > 0)
    {
-      InfoLog(<<"Posting timer C");
-      mStack.post(*tc,mTimerC,this);
+      InfoLog(<<"Posting timer C (" << delay << "sec)");
+      mStack.post(*tc, delay, this);
    }
 }
 

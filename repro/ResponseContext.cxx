@@ -492,7 +492,7 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    resip_assert(target->status() == Target::Candidate);
 
    SipMessage& orig=mRequestContext.getOriginalRequest();
-   SipMessage request(orig);
+   SipMessage request(orig, target->mSipMessageOptions);
 
    // If the target has a ;lr parameter, then perform loose routing
    if(target->uri().exists(p_lr))
@@ -583,8 +583,9 @@ ResponseContext::beginClientTransaction(repro::Target* target)
    if(!mRequestContext.mInitialTimerCSet &&
       mRequestContext.getOriginalRequest().method()==INVITE)
    {
-      mRequestContext.mInitialTimerCSet=true;
-      mRequestContext.updateTimerC();
+    //   mRequestContext.mInitialTimerCSet=true;
+    //   mRequestContext.updateTimerC(target->mSipMessageOptions.mTxOptions.mTimerC);
+      updateTimerC(request.getTransactionId(), target->mSipMessageOptions.mTxOptions.mTimerC);
    }
    
    // the rest of 16.6 is implemented by the transaction layer of resip
@@ -973,13 +974,24 @@ ResponseContext::processCancel(const SipMessage& request)
    }
 }
 
-void
-ResponseContext::processTimerC()
+void ResponseContext::updateTimerC(const resip::Data &tid, int customDelayMs)
 {
+   InfoLog(<<"Updating timer C for client transaction " << tid);
+//    mTCSerial++;
+//    TimerCMessage* tc = new TimerCMessage(tid, mTCSerial);
+   TimerCMessage* tc = new TimerCMessage(tid, 0);
+   mRequestContext.getProxy().postTimerC(std::unique_ptr<TimerCMessage>(tc), customDelayMs);
+}
+
+void ResponseContext::processTimerC(const resip::Data &tid)
+{
+   InfoLog(<<"Timer C fired for transaction " << tid); 
    if (!mRequestContext.mHaveSentFinalResponse)
    {
-      InfoLog(<<"Canceling client transactions due to timer C.");
-      cancelAllClientTransactions();
+    //   InfoLog(<<"Canceling client transactions due to timer C.");
+      InfoLog(<<"Canceling client transaction " << tid << " due to timer C.");
+    //   cancelAllClientTransactions();
+      cancelClientTransaction(tid, nullptr);
    }
 }
 
@@ -1109,7 +1121,10 @@ ResponseContext::processResponse(SipMessage& response)
       case 1:
          if(mRequestContext.getOriginalRequest().method() == INVITE)
          {
-            mRequestContext.updateTimerC();
+            auto transactionId = i->first;
+            auto target = i->second;
+            // mRequestContext.updateTimerC(target->mSipMessageOptions.mTxOptions.mTimerC);
+            updateTimerC(transactionId, target->mSipMessageOptions.mTxOptions.mTimerC);
          }
 
          if  (!mRequestContext.mHaveSentFinalResponse)

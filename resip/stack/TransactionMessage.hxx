@@ -4,6 +4,7 @@
 #include "rutil/ResipAssert.h"
 #include "resip/stack/Message.hxx"
 #include "rutil/HeapInstanceCounter.hxx"
+#include "rutil/Timer.hxx"
 
 namespace resip
 {
@@ -13,15 +14,18 @@ class TransactionMessage : public Message
    public:
       RESIP_HeapCount(TransactionMessage);
 
+
       virtual const Data& getTransactionId() const=0; 
 
       // indicates this message is associated with a Client Transaction for the
       // purpose of determining which TransactionMap to use
-      virtual bool isClientTransaction() const = 0; 
+      virtual bool isClientTransaction() const = 0;
+
+      // Allows to customise TimerB value on a per-egress TX basis.
+      virtual int getTimerB() const { return Timer::TB; }
 
       virtual Message* clone() const {resip_assert(false); return NULL;}
 };
-
 }
 
 #endif
